@@ -1,7 +1,7 @@
 
 <img width="587" height="338" alt="Screenshot 2026-05-04 at 21 56 37" src="https://github.com/user-attachments/assets/0def518f-6925-483f-84dc-8d4f1de609c4" />
 
-
+![Auto-playing GIF](docs/Area3.gif)
 
 # [MaccyPlus](https://github.com/followthemoney1/MaccyPlus)
 
