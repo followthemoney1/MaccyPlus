@@ -20,6 +20,9 @@ enum KeyChord: CaseIterable {
   static var previewKey: Key? { Sauce.shared.key(shortcut: .togglePreview) }
   static var previewModifiers: NSEvent.ModifierFlags? { KeyboardShortcuts.Shortcut(name: .togglePreview)?.modifiers }
 
+  static var toggleModeKey: Key? { Sauce.shared.key(shortcut: .toggleMode) }
+  static var toggleModeModifiers: NSEvent.ModifierFlags? { KeyboardShortcuts.Shortcut(name: .toggleMode)?.modifiers }
+
   case clearHistory
   case clearHistoryAll
   case clearSearch
@@ -40,6 +43,7 @@ enum KeyChord: CaseIterable {
   case selectCurrentItem
   case close
   case togglePreview
+  case toggleMode
   case unknown
 
   init(_ event: NSEvent?) {
@@ -123,6 +127,8 @@ enum KeyChord: CaseIterable {
       self = .close
     case (KeyChord.previewKey, KeyChord.previewModifiers):
       self = .togglePreview
+    case (KeyChord.toggleModeKey, KeyChord.toggleModeModifiers):
+      self = .toggleMode
     case (_, _) where !modifierFlags.isDisjoint(with: [.command, .control, .option]):
       self = .ignored
     default:

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>Maccy</title>
-    <link>https://raw.githubusercontent.com/p0deje/Maccy/master/appcast.xml</link>
+    <title>MaccyPlus</title>
+    <link>https://raw.githubusercontent.com/followthemoney1/MaccyPlus/master/appcast.xml</link>
     <description>Most recent changes with links to updates.</description>
     <language>en</language>
     <item>
@@ -16,7 +16,7 @@
         ]]>
       </description>
       <pubDate>2025-11-27</pubDate>
-      <releaseNotesLink>https://github.com/p0deje/Maccy/releases/tag/2.6.1</releaseNotesLink>
+      <releaseNotesLink>https://github.com/followthemoney1/MaccyPlus/releases/tag/2.6.1</releaseNotesLink>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
       <enclosure
         url="https://github.com/p0deje/Maccy/releases/download/2.6.1/Maccy.app.zip"

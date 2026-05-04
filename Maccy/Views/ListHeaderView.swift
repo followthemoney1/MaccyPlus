@@ -13,10 +13,12 @@ struct ListHeaderView: View {
 
   var body: some View {
     HStack {
+      ModePickerView()
+        .padding(.leading, 5)
+
       if showTitle {
-        Text("Maccy")
+        Text("MaccyPlus")
           .foregroundStyle(.secondary)
-          .padding(.leading, 5)
       }
 
       SearchFieldView(placeholder: "search_placeholder", query: $searchQuery)

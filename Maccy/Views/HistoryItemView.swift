@@ -58,5 +58,15 @@ struct HistoryItemView: View {
         }
       }
     }
+    .contextMenu {
+      Button(String(localized: "save_as_command")) {
+        Task { @MainActor in
+          appState.mode = .commands
+          appState.commandEditorPrefillBody = item.text
+          appState.showCommandEditor = true
+        }
+      }
+      .accessibilityIdentifier("history_row_save_as_command")
+    }
   }
 }

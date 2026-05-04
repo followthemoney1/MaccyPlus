@@ -4,24 +4,59 @@ import Foundation
 import Settings
 import SwiftUI
 
+enum AppMode: String, Defaults.Serializable {
+  case history
+  case commands
+}
+
 @Observable
 class AppState: Sendable {
-  static let shared = AppState(history: History.shared, footer: Footer())
+  static let shared = AppState(history: History.shared, commands: CommandsManager.shared, footer: Footer())
 
   let multiSelectionEnabled = false
 
   var appDelegate: AppDelegate?
   var popup: Popup
   var history: History
+  var commands: CommandsManager
   var footer: Footer
   var navigator: NavigationManager
   var preview: SlideoutController
+
+  var mode: AppMode = .history {
+    didSet {
+      Defaults[.lastMode] = mode
+      AppState.shared.popup.needsResize = true
+    }
+  }
+
+  /// When non-nil, the commands list shows the variable input view for this command.
+  var activeInputCommand: CommandDecorator?
+  /// Shows the command editor sheet.
+  var showCommandEditor = false
+  var editingCommand: CommandDecorator?
+  var commandEditorPrefillBody: String?
+
+  var searchQuery: String {
+    get {
+      switch mode {
+      case .history: return history.searchQuery
+      case .commands: return commands.searchQuery
+      }
+    }
+    set {
+      switch mode {
+      case .history: history.searchQuery = newValue
+      case .commands: commands.searchQuery = newValue
+      }
+    }
+  }
 
   var searchVisible: Bool {
     if !Defaults[.showSearch] { return false }
     switch Defaults[.searchVisibility] {
     case .always: return true
-    case .duringSearch: return !history.searchQuery.isEmpty
+    case .duringSearch: return !searchQuery.isEmpty
     }
   }
 
@@ -35,9 +70,11 @@ class AppState: Sendable {
   private let about = About()
   private var settingsWindowController: SettingsWindowController?
 
-  init(history: History, footer: Footer) {
+  init(history: History, commands: CommandsManager, footer: Footer) {
     self.history = history
+    self.commands = commands
     self.footer = footer
+    self.mode = Defaults[.lastMode]
     popup = Popup()
     navigator = NavigationManager(history: history, footer: footer)
     preview = SlideoutController(
@@ -53,6 +90,16 @@ class AppState: Sendable {
 
   @MainActor
   func select() {
+    switch mode {
+    case .history:
+      selectInHistoryMode()
+    case .commands:
+      selectInCommandsMode()
+    }
+  }
+
+  @MainActor
+  private func selectInHistoryMode() {
     if !navigator.selection.isEmpty {
       if navigator.isMultiSelectInProgress {
         navigator.isManualMultiSelect = false
@@ -61,7 +108,6 @@ class AppState: Sendable {
         history.select(navigator.selection.first)
       }
     } else if let item = footer.selectedItem {
-      // TODO: Use item.suppressConfirmation, but it's not updated!
       if item.confirmation != nil, Defaults[.suppressClearAlert] == false {
         item.showConfirmation = true
       } else {
@@ -74,10 +120,74 @@ class AppState: Sendable {
   }
 
   @MainActor
+  private func selectInCommandsMode() {
+    if !navigator.commandsSelection.isEmpty {
+      if let item = navigator.commandsSelection.first {
+        Task {
+          await executeCommand(item)
+        }
+      }
+    } else if let item = footer.selectedItem {
+      if item.confirmation != nil, Defaults[.suppressClearAlert] == false {
+        item.showConfirmation = true
+      } else {
+        item.action()
+      }
+    }
+  }
+
+  @MainActor
+  func executeCommand(_ item: CommandDecorator) async {
+    let bodyText = item.command.body
+
+    // Check for %INPUT:...% tokens
+    if VariableExpander.shared.hasInputTokens(in: bodyText) {
+      activeInputCommand = item
+      return
+    }
+
+    guard let resolved = await VariableExpander.shared.expand(bodyText) else { return }
+    finalizeCommandExecution(item, resolved: resolved)
+  }
+
+  @MainActor
+  func finalizeCommandExecution(_ item: CommandDecorator, resolved: String) {
+    item.command.lastUsedAt = Date.now
+    item.command.useCount += 1
+    try? Storage.shared.context.save()
+
+    Clipboard.shared.copy(resolved)
+    popup.close()
+    Clipboard.shared.paste()
+  }
+
+  @MainActor
+  func submitVariableInput(_ values: [String: String]) {
+    guard let item = activeInputCommand else { return }
+    let resolved = VariableExpander.shared.expand(item.command.body, inputValues: values)
+    activeInputCommand = nil
+    finalizeCommandExecution(item, resolved: resolved)
+  }
+
+  @MainActor
+  func cancelVariableInput() {
+    activeInputCommand = nil
+  }
+
+  @MainActor
   func togglePin() {
-    withTransaction(Transaction()) {
-      navigator.selection.forEach { _, item in
-        history.togglePin(item)
+    switch mode {
+    case .history:
+      withTransaction(Transaction()) {
+        navigator.selection.forEach { _, item in
+          history.togglePin(item)
+        }
+      }
+    case .commands:
+      withTransaction(Transaction()) {
+        navigator.commandsSelection.forEach { _, item in
+          commands.togglePin(item)
+        }
       }
     }
   }
@@ -90,15 +200,28 @@ class AppState: Sendable {
 
   @MainActor
   func deleteSelection() {
-    guard let leadItem = navigator.leadHistoryItem else { return }
-    let nextUnselectedItem = history.visibleItems.nearest(to: leadItem) { !$0.isSelected }
+    switch mode {
+    case .history:
+      guard let leadItem = navigator.leadHistoryItem else { return }
+      let nextUnselectedItem = history.visibleItems.nearest(to: leadItem) { !$0.isSelected }
 
-    withTransaction(Transaction()) {
-      navigator.selection.forEach { _, item in
-        history.delete(item)
+      withTransaction(Transaction()) {
+        navigator.selection.forEach { _, item in
+          history.delete(item)
+        }
+        navigator.select(item: nextUnselectedItem)
       }
-      navigator.select(item: nextUnselectedItem)
+    case .commands:
+      withTransaction(Transaction()) {
+        navigator.commandsSelection.forEach { _, item in
+          commands.delete(item)
+        }
+      }
     }
+  }
+
+  func toggleMode() {
+    mode = (mode == .history) ? .commands : .history
   }
 
   func openAbout() {

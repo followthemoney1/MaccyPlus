@@ -25,10 +25,32 @@ struct ContentView: View {
             )
 
             VStack(alignment: .leading, spacing: 0) {
-              HistoryListView(
-                searchQuery: $appState.history.searchQuery,
-                searchFocused: $searchFocused
-              )
+              switch appState.mode {
+              case .history:
+                HistoryListView(
+                  searchQuery: $appState.history.searchQuery,
+                  searchFocused: $searchFocused
+                )
+              case .commands:
+                if let inputCommand = appState.activeInputCommand {
+                  VariableInputView(
+                    labels: VariableExpander.shared.inputLabels(in: inputCommand.command.body),
+                    onSubmit: { values in
+                      appState.submitVariableInput(values)
+                    },
+                    onCancel: {
+                      appState.cancelVariableInput()
+                    }
+                  )
+                } else if appState.showCommandEditor {
+                  CommandEditorView(
+                    editingCommand: appState.editingCommand,
+                    prefillBody: appState.commandEditorPrefillBody
+                  )
+                } else {
+                  CommandsListView()
+                }
+              }
 
               FooterView(footer: appState.footer)
             }
@@ -54,6 +76,8 @@ struct ContentView: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .task {
         try? await appState.history.load()
+        appState.commands.load()
+        Storage.shared.ensureDefaultFolder()
       }
     }
     .animation(.easeInOut(duration: 0.2), value: appState.searchVisible)

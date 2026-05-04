@@ -36,7 +36,8 @@ class Footer: ItemsContainer {
           confirm: "clear_alert_confirm",
           cancel: "clear_alert_cancel"
         ),
-        suppressConfirmation: suppressClearAlert
+        suppressConfirmation: suppressClearAlert,
+        visibleInModes: [.history]
       ) {
         Task { @MainActor in
           AppState.shared.history.clear()
@@ -52,10 +53,19 @@ class Footer: ItemsContainer {
           confirm: "clear_alert_confirm",
           cancel: "clear_alert_cancel"
         ),
-        suppressConfirmation: suppressClearAlert
+        suppressConfirmation: suppressClearAlert,
+        visibleInModes: [.history]
       ) {
         Task { @MainActor in
           AppState.shared.history.clearAll()
+        }
+      },
+      FooterItem(
+        title: "add_command",
+        visibleInModes: [.commands]
+      ) {
+        Task { @MainActor in
+          AppState.shared.showCommandEditor = true
         }
       },
       FooterItem(

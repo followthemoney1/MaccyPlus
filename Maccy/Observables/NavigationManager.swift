@@ -18,6 +18,13 @@ class NavigationManager { // swiftlint:disable:this type_body_length
     }
   }
 
+  var commandsSelection: Selection<CommandDecorator> = Selection() {
+    willSet {
+      commandsSelection.forEach { _, item in item.selectionIndex = -1 }
+      newValue.forEach { index, item in item.selectionIndex = index }
+    }
+  }
+
   var scrollTarget: UUID?
   var leadSelection: UUID? {
     if let item = leadHistoryItem {

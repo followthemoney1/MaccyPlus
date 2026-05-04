@@ -23,6 +23,7 @@ class FooterItem: Equatable, Identifiable, HasVisibility {
   var showConfirmation: Bool = false
   var suppressConfirmation: Binding<Bool>?
   var isVisible: Bool = true
+  var visibleInModes: Set<AppMode>
   var action: () -> Void
 
   init(
@@ -31,6 +32,7 @@ class FooterItem: Equatable, Identifiable, HasVisibility {
     help: LocalizedStringKey? = nil,
     confirmation: Confirmation? = nil,
     suppressConfirmation: Binding<Bool>? = nil,
+    visibleInModes: Set<AppMode> = [.history, .commands],
     action: @escaping () -> Void
   ) {
     self.title = title
@@ -38,6 +40,11 @@ class FooterItem: Equatable, Identifiable, HasVisibility {
     self.help = help
     self.confirmation = confirmation
     self.suppressConfirmation = suppressConfirmation
+    self.visibleInModes = visibleInModes
     self.action = action
+  }
+
+  func isVisible(in mode: AppMode) -> Bool {
+    return visibleInModes.contains(mode)
   }
 }
