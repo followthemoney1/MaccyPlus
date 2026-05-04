@@ -1,5 +1,7 @@
 
-<img width="128px" src="https://maccy.app/img/maccy/Logo.png" alt="Logo" />
+<img width="587" height="338" alt="Screenshot 2026-05-04 at 21 56 37" src="https://github.com/user-attachments/assets/0def518f-6925-483f-84dc-8d4f1de609c4" />
+
+
 
 # [MaccyPlus](https://github.com/followthemoney1/MaccyPlus)
 
@@ -8,6 +10,8 @@
 MaccyPlus is a lightweight clipboard manager for macOS with a built-in **Commands** library. It keeps the history of what you copy, lets you quickly navigate and search previous clipboard contents, and lets you save reusable commands with smart variables.
 
 Based on [Maccy](https://github.com/p0deje/Maccy) by Alex Rodionov. MaccyPlus works on macOS Sonoma 14 or higher.
+
+
 
 <!-- vim-markdown-toc GFM -->
 
